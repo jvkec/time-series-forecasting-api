@@ -9,7 +9,6 @@ class ModelSelector:
     def select_and_forecast(self, series: pd.Series, forecast_steps: int):
         best_model = None
         best_score = float("inf")
-        best_forecast = None
 
         # Holdout strategy: last N points for validation
         train_series = series[:-forecast_steps]
@@ -20,18 +19,23 @@ class ModelSelector:
                 model.fit(train_series)
                 forecast = model.predict(forecast_steps)
                 score = mean_absolute_error(val_series, forecast)
+
                 if score < best_score:
                     best_score = score
                     best_model = model
-                    best_forecast = forecast
             except Exception as e:
                 print(f"[WARN] Model {type(model).__name__} failed: {e}")
+            
+            if best_model is None:
+                raise RuntimeError("All models failed. Try submitting more data or tuning model settings.")
 
-        if best_forecast is None:
-            raise Exception("All models failed to forecast. Try using more data.")
+            forecast, lower, upper = best_model.predict_with_ci(forecast_steps)
 
-        return {
-            "model": type(best_model).__name__,
-            "forecast": best_forecast.tolist(),
-            "score": best_score
-        }
+            return {
+                "model": type(best_model).__name__,
+                "forecast": forecast.tolist(),
+                "lower_ci": lower.tolist(),
+                "upper_ci": upper.tolist(),
+                "score": best_score
+            }
+

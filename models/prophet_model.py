@@ -15,7 +15,7 @@ class ProphetModel(BaseForecastModel):
 
     def predict(self, steps: int) -> pd.Series:
         if not self.fitted:
-            raise Exception("Model not fitted.")
+            raise ValueError("Model not fitted.")
         
         future = self.model.make_future_dataframe(periods=steps)
         forecast = self.model.predict(future)
@@ -27,5 +27,6 @@ class ProphetModel(BaseForecastModel):
         return (
             forecast['yhat'][-steps:].reset_index(drop=True),
             forecast['yhat_lower'][-steps:].reset_index(drop=True),
-            forecast['yhat_upper'][-steps:].reset_index(drop=True),
+            forecast['yhat_upper'][-steps:].reset_index(drop=True)
         )
+
