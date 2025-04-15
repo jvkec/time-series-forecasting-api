@@ -25,17 +25,16 @@ class ModelSelector:
                     best_model = model
             except Exception as e:
                 print(f"[WARN] Model {type(model).__name__} failed: {e}")
-            
-            if best_model is None:
-                raise RuntimeError("All models failed. Try submitting more data or tuning model settings.")
+        
+        if best_model is None:
+            raise RuntimeError("All models failed. Try submitting more data or tuning model settings.")
 
-            forecast, lower, upper = best_model.predict_with_ci(forecast_steps)
+        forecast, lower, upper = best_model.predict_with_ci(forecast_steps)
 
-            return {
-                "model": type(best_model).__name__,
-                "forecast": forecast.tolist(),
-                "lower_ci": lower.tolist(),
-                "upper_ci": upper.tolist(),
-                "score": best_score
-            }
-
+        return {
+            "model": type(best_model).__name__,
+            "forecast": forecast.tolist(),
+            "lower_ci": lower.tolist(),
+            "upper_ci": upper.tolist(),
+            "score": best_score
+        }

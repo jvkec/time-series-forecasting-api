@@ -12,6 +12,11 @@ class LSTMNetwork(nn.Module):
         self.fc = nn.Linear(hidden_size, 1)
 
     def forward(self, x):
+        # Make sure x has right dimensions (batch_size, seq_len, features)
+        if x.dim() == 4:
+            # Remove extra dimension if present (this was causing the 4D error)
+            x = x.squeeze(2)
+        
         out, _ = self.lstm(x)
         return self.fc(out[:, -1, :])
 
@@ -38,7 +43,10 @@ class LSTMModel(BaseForecastModel):
         scaled_values = self.scaler.fit_transform(values).flatten()
 
         X, y = self._prepare_data(scaled_values)
-        X = X.unsqueeze(-1)
+        
+        # Ensure proper dimensions (batch_size, seq_len, features)
+        if X.dim() == 4:
+            X = X.squeeze(2)
 
         self.last_seq = torch.tensor(scaled_values[-self.n_lags:]).float().reshape(1, self.n_lags, 1)
 
@@ -61,6 +69,10 @@ class LSTMModel(BaseForecastModel):
 
         with torch.no_grad():
             for _ in range(steps):
+                # Ensure proper dimensions (batch_size, seq_len, features)
+                if seq.dim() == 4:
+                    seq = seq.squeeze(2)
+                    
                 pred = self.model(seq).item()
                 preds.append(pred)
                 next_input = torch.tensor([[pred]]).float().unsqueeze(0)
